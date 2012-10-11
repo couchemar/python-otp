@@ -1,4 +1,5 @@
 # coding: utf-8
+import struct
 
 # EPMD Requests
 ALIVE2_REQ = 'ALIVE2_REQ'
@@ -17,3 +18,17 @@ DUMP_RESP = 'DUMP_RESP'
 KILL_RESP = 'KILL_RESP'
 STOP_OK_RESP = 'STOP_OK_RESP'
 STOP_NOTOK_RESP = 'STOP_NOTOK_RESP'
+
+
+def encode_request(request):
+    """
+    Each request *_REQ is preceded by a two-byte length field.
+    """
+    request_len = len(request)
+    return struct.pack('!H{}s'.format(request_len),
+                       request_len, request)
+
+def encode_alive2_req(port, node_type, protocol,
+                      highest_version, lowest_version,
+                      node_name, extra):
+    pass
