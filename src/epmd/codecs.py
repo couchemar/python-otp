@@ -28,7 +28,10 @@ def encode_request(request):
     return struct.pack('!H{}s'.format(request_len),
                        request_len, request)
 
-def encode_alive2_req(port, node_type, protocol,
-                      highest_version, lowest_version,
-                      node_name, extra):
+def encode_alive2_req(port, node_name, extra="",
+                      node_type=72, protocol=0,
+                      highest_version=5,
+                      lowest_version=5):
     pass
+
+
