@@ -2,7 +2,9 @@
 import struct
 
 # EPMD Requests
+ALIVE2_REQ_CODE = 120
 ALIVE2_REQ = 'ALIVE2_REQ'
+
 ALIVE_CLOSE_REQ = 'ALIVE_CLOSE_REQ'
 PORT_PLEASE2_REQ = 'PORT_PLEASE2_REQ'
 NAMES_REQ = 'NAMES_REQ'
@@ -11,6 +13,7 @@ KILL_REQ = 'KILL_REQ'
 STOP_REQ = 'STOP_REQ'
 
 # EPMD Responses
+ALIVE2_RESP_CODE = 121
 ALIVE2_RESP = 'ALIVE2_RESP'
 PORT2_RESP = 'PORT2_RESP'
 NAMES_RESP = 'NAMES_RESP'
@@ -19,6 +22,7 @@ KILL_RESP = 'KILL_RESP'
 STOP_OK_RESP = 'STOP_OK_RESP'
 STOP_NOTOK_RESP = 'STOP_NOTOK_RESP'
 
+RESPONSES = {ALIVE2_RESP_CODE: ALIVE2_RESP}
 
 def encode_request(request):
     """
@@ -48,7 +52,7 @@ def encode_alive2_req(port, node_name, extra="",
         'H' # Extra length
         '{extra_length}s' # extra
     )
-    req_code = 120
+    req_code = ALIVE2_REQ_CODE
     node_name_length = len(node_name)
     extra_length = len(extra)
     r_format = r_format.format(node_name_length=node_name_length,
@@ -61,4 +65,4 @@ def encode_alive2_req(port, node_name, extra="",
 def decode_alive2_resp(sock):
     return struct.unpack('!BH', sock.recv(3))
 
-decoders = {121: decode_alive2_resp}
+decoders = {ALIVE2_RESP_CODE: decode_alive2_resp}
