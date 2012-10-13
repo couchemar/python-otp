@@ -1,8 +1,7 @@
 # coding: utf-8
 import struct
 import logging
-from gevent import Greenlet
-from gevent import socket
+from gevent import sleep, socket, Greenlet
 
 import codecs
 
@@ -10,14 +9,20 @@ EPMD_HOST = 'localhost'
 EPMD_PORT = 4369
 
 
-class _EPMDConnection(Greenlet):
-    logger = logging.getLogger('otp._epmd_connection')
-    def __init__(self, epmd_host=EPMD_HOST,
-                 epmd_port=EPMD_PORT):
-        super(_EPMDConnection, self).__init__()
+class EPMDConnection(Greenlet):
+    logger = logging.getLogger('otp.epmd_connection')
+    def __init__(self, epmd_host=None,
+                 epmd_port=None):
+        super(EPMDConnection, self).__init__()
         self._connected = False
-        self.epmd_host = epmd_host
-        self.epmd_port = epmd_port
+        if epmd_host is not None:
+            self.epmd_host = epmd_host
+        else:
+            self.epmd_host = EPMD_HOST
+        if epmd_port is not None:
+            self.epmd_port = epmd_port
+        else:
+            self.epmd_port = EPMD_PORT
 
         self.logger.info('Connect to (%s, %s)', self.epmd_host, self.epmd_port)
 
@@ -42,11 +47,11 @@ class _EPMDConnection(Greenlet):
         return codecs.decoders[resp_code](self.socket)
 
 
-class EPMDKeepAliveConnection(_EPMDConnection):
-    logger = logging.getLogger('otp.epmd_connection')
+class EPMDKeepAliveConnection(EPMDConnection):
+    logger = logging.getLogger('otp.epmd_keep_alive_connection')
     def __init__(self, node_name, port,
-                 epmd_host=EPMD_HOST,
-                 epmd_port=EPMD_PORT):
+                 epmd_host=None,
+                 epmd_port=None):
         super(EPMDKeepAliveConnection, self).__init__(epmd_host, epmd_port)
         self.node_name = node_name
         self.port = port
@@ -72,7 +77,14 @@ class EPMDKeepAliveConnection(_EPMDConnection):
             return
         self._register()
         while self._connected and self._status == 'registered':
-            pass
+            sleep(0)
+
+
+def port2_please(node_name, host=None, port=None):
+    node_name = node_name.split('@')[0]
+    conn = EPMDConnection(host, port)
+    conn.send_request(codecs.encode_port_please2_req(node_name))
+    return conn.recv_response()
 
 
 logging.getLogger('otp').setLevel(logging.DEBUG)

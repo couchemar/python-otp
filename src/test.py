@@ -1,6 +1,15 @@
 # coding: utf-8
-from epmd import EPMDKeepAliveConnection
+from epmd import EPMDKeepAliveConnection, port2_please
 
-conn = EPMDKeepAliveConnection('test@test', 9999)
+import gevent
+
+conn = EPMDKeepAliveConnection('test@andrey-1215N', 9999)
 conn.start()
-conn.join()
+
+print port2_please('erl1')
+
+conn.join(1)
+
+
+
+
