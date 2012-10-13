@@ -15,12 +15,19 @@ class _EPMDConnection(Greenlet):
     def __init__(self, epmd_host=EPMD_HOST,
                  epmd_port=EPMD_PORT):
         super(_EPMDConnection, self).__init__()
+        self._connected = False
         self.epmd_host = epmd_host
         self.epmd_port = epmd_port
 
         self.logger.info('Connect to (%s, %s)', self.epmd_host, self.epmd_port)
-        self.socket = socket.create_connection((self.epmd_host,
-                                                self.epmd_port))
+
+        try:
+            self.socket = socket.create_connection((self.epmd_host,
+                                                    self.epmd_port))
+            self._connected = True
+        except socket.error as exc:
+            self.logger.error('Could not connect to %s', (self.epmd_host,
+                                                          self.epmd_port))
 
     def send_request(self, request):
         epmd_request = codecs.encode_request(request)
@@ -35,16 +42,15 @@ class _EPMDConnection(Greenlet):
         return codecs.decoders[resp_code](self.socket)
 
 
-class EPMDConnection(_EPMDConnection):
+class EPMDKeepAliveConnection(_EPMDConnection):
     logger = logging.getLogger('otp.epmd_connection')
     def __init__(self, node_name, port,
                  epmd_host=EPMD_HOST,
                  epmd_port=EPMD_PORT):
-        super(EPMDConnection, self).__init__(epmd_host, epmd_port)
+        super(EPMDKeepAliveConnection, self).__init__(epmd_host, epmd_port)
         self.node_name = node_name
         self.port = port
         self._status = None
-        self._connected = False
 
     def _register(self):
         self.logger.info('Try to register node. Send %s', codecs.ALIVE2_REQ)
@@ -62,8 +68,10 @@ class EPMDConnection(_EPMDConnection):
             self.logger.error('Could not register node')
 
     def _run(self):
+        if not self._connected:
+            return
         self._register()
-        while self._connected:
+        while self._connected and self._status == 'registered':
             pass
 
 
