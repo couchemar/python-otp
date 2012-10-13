@@ -52,9 +52,13 @@ def encode_alive2_req(port, node_name, extra="",
     node_name_length = len(node_name)
     extra_length = len(extra)
     r_format = r_format.format(node_name_length=node_name_length,
-                               extar_length=extra_length)
+                               extra_length=extra_length)
     return struct.pack(r_format, req_code, port, node_type, protocol,
                        highest_version, lowest_version, node_name_length,
-                       extra_length)
+                       node_name, extra_length, extra)
 
 
+def decode_alive2_resp(sock):
+    return struct.unpack('!BH', sock.recv(3))
+
+decoders = {121: decode_alive2_resp}
