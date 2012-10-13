@@ -28,8 +28,9 @@ class _EPMDConnection(Greenlet):
         self.socket.send(epmd_request)
 
     def recv_response(self):
+        self.logger.info('Receive')
         [resp_code] = struct.unpack('!B', self.socket.recv(1))
-        self.logger.info('Receive %s', (resp_code,
+        self.logger.info('Received: %s', (resp_code,
                                         codecs.RESPONSES[resp_code]))
         return codecs.decoders[resp_code](self.socket)
 
