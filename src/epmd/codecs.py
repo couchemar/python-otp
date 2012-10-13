@@ -28,10 +28,33 @@ def encode_request(request):
     return struct.pack('!H{}s'.format(request_len),
                        request_len, request)
 
+
 def encode_alive2_req(port, node_name, extra="",
                       node_type=72, protocol=0,
                       highest_version=5,
                       lowest_version=5):
-    pass
+    """
+    Register node in the EPMD
+    """
+    r_format = (
+        '!B' # code
+        'H' # port
+        'B' # node type
+        'B' # protocol
+        'H' # highest version
+        'H' # lowest version
+        'H' # Node name length
+        '{node_name_length}s' # Node Name
+        'H' # Extra length
+        '{extra_length}s' # extra
+    )
+    req_code = 120
+    node_name_length = len(node_name)
+    extra_length = len(extra)
+    r_format = r_format.format(node_name_length=node_name_length,
+                               extar_length=extra_length)
+    return struct.pack(r_format, req_code, port, node_type, protocol,
+                       highest_version, lowest_version, node_name_length,
+                       extra_length)
 
 
