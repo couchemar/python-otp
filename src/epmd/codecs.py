@@ -87,7 +87,11 @@ def decode_port_please2_resp(sock):
         (port, node_type,
          protocol, hv,
          lv, nlen) = struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
-        node_name = struct.unpack('!{}s'.format(nlen), sock.recv(nlen))
+        [node_name] = struct.unpack('!{}s'.format(nlen), sock.recv(nlen))
+        [elen] = struct.unpack('!H', sock.recv(2))
+        [extra] = struct.unpack('!{}s'.format(elen), sock.recv(elen))
+    return (result, port, node_type, protocol, hv, lv,
+            nlen, node_name, elen, extra)
 
 decoders = {ALIVE2_RESP_CODE: decode_alive2_resp,
             PORT2_RESP_CODE: decode_port_please2_resp}
