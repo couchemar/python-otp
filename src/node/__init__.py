@@ -4,7 +4,7 @@ from gevent import sleep, socket, Greenlet
 
 
 class OutgoingNodeConnection(Greenlet):
-    logger = logging.getLogger('otp.node_connection')
+    logger = logging.getLogger('otp.node.connection')
 
     def __init__(self, port, cookie):
         pass
