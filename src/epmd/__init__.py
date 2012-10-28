@@ -11,6 +11,7 @@ EPMD_PORT = 4369
 
 class EPMDConnection(Greenlet):
     logger = logging.getLogger('otp.epmd_connection')
+
     def __init__(self, epmd_host=None,
                  epmd_port=None):
         super(EPMDConnection, self).__init__()
@@ -31,8 +32,10 @@ class EPMDConnection(Greenlet):
                                                     self.epmd_port))
             self._connected = True
         except socket.error as exc:
-            self.logger.error('Could not connect to %s', (self.epmd_host,
-                                                          self.epmd_port))
+            self.logger.error('Could not connect to %s because of %s',
+                              (self.epmd_host,
+                               self.epmd_port,
+                               exc))
 
     def send_request(self, request):
         epmd_request = codecs.encode_request(request)
@@ -49,6 +52,7 @@ class EPMDConnection(Greenlet):
 
 class EPMDKeepAliveConnection(EPMDConnection):
     logger = logging.getLogger('otp.epmd_keep_alive_connection')
+
     def __init__(self, node_name, port,
                  epmd_host=None,
                  epmd_port=None):

@@ -7,7 +7,3 @@ conn.start()
 print port2_please('erl1')
 
 conn.join(1)
-
-
-
-

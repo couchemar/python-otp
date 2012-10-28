@@ -30,6 +30,7 @@ STOP_NOTOK_RESP = 'STOP_NOTOK_RESP'
 RESPONSES = {ALIVE2_RESP_CODE: ALIVE2_RESP,
              PORT2_RESP_CODE: PORT2_RESP}
 
+
 def encode_request(request):
     """
     Each request *_REQ is preceded by a two-byte length field.
@@ -47,16 +48,16 @@ def encode_alive2_req(port, node_name, extra="",
     Register node in the EPMD
     """
     r_format = (
-        '!B' # code
-        'H' # port
-        'B' # node type
-        'B' # protocol
-        'H' # highest version
-        'H' # lowest version
-        'H' # Node name length
-        '{node_name_length}s' # Node Name
-        'H' # Extra length
-        '{extra_length}s' # extra
+        '!B'  # code
+        'H'  # port
+        'B'  # node type
+        'B'  # protocol
+        'H'  # highest version
+        'H'  # lowest version
+        'H'  # Node name length
+        '{node_name_length}s'  # Node Name
+        'H'  # Extra length
+        '{extra_length}s'  # extra
     )
     req_code = ALIVE2_REQ_CODE
     node_name_length = len(node_name)

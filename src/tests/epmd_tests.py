@@ -7,6 +7,7 @@ from time import sleep
 
 from epmd import EPMDKeepAliveConnection, port2_please
 
+
 class EPMDTestCase(unittest.TestCase):
 
     def setUp(self):
