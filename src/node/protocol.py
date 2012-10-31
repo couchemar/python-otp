@@ -29,9 +29,6 @@ def encode_name(node_name, version=distrVersion, flags=distrFlags):
 
 def decode_status(sock):
     [status_len] = struct.unpack('!H', sock.recv(2))
-
-    [status] = struct.unpack('!{}s'.format(status_len), sock.recv(status_len))
-    tag = status[0]
-    if tag == 's':
-        status = status[1:]
+    status = struct.unpack('!1s{}s'.format(status_len-1),
+                           sock.recv(status_len))
     return status

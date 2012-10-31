@@ -20,4 +20,4 @@ class NodeTestCase(unittest.TestCase):
         out_conn = OutgoingNodeConnection('test', erl_port, 'secret')
         out_conn.connect()
         out_conn.send_name()
-        self.assertEqual(out_conn.recv_status(), 'ok')
+        self.assertEqual(out_conn.recv_status(), ('s', 'ok'))
