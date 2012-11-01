@@ -41,7 +41,6 @@ def decode_status(sock):
                          sock.recv(status_len))
 
 
-
 def decode_challenge(sock):
     [ch_len] = _decode_length(sock)
     _fmt = '!sHII'
@@ -56,4 +55,16 @@ def gen_challenge():
 
 
 def gen_digest(challenge, cookie):
-    return hashlib.md5(cookie + str(challenge)).digest()
+    _challenge = str(challenge)
+    if _challenge[-1] == 'L':
+        _challenge = _challenge[:-1]
+    return hashlib.md5(cookie + _challenge).digest()
+
+
+def encode_challenge_reply(challenge, digest):
+    return 'r{}{}'.format(struct.pack('!I', challenge), digest)
+
+
+def decode_challenge_ack(sock):
+    fmt = '!1s16s'
+    return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))

@@ -27,3 +27,5 @@ class NodeTestCase(unittest.TestCase):
         self.assertEqual(res[0], 'n')
         expected_node_name = self.erl_node_name + '@' + socket.gethostname()
         self.assertEqual(res[4], expected_node_name)
+        out_conn.send_challenge_reply()
+        res = out_conn.recv_challenge_ack()
