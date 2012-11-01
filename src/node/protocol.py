@@ -1,5 +1,7 @@
 # coding: utf-8
 import struct
+import random
+import hashlib
 from epmd.codecs import encode_request
 
 DISTR_FLAG_PUBLISHED = 1
@@ -42,8 +44,16 @@ def decode_status(sock):
 
 def decode_challenge(sock):
     [ch_len] = _decode_length(sock)
-    # Equal to decode_name (not realized yet)
     _fmt = '!sHII'
     name_fmt = '{}s'.format(ch_len - struct.calcsize(_fmt))
     fmt = '{}{}'.format(_fmt, name_fmt)
     return struct.unpack(fmt, sock.recv(ch_len))
+
+
+def gen_challenge():
+    random.seed()
+    return int(random.randint(0, 2**32))
+
+
+def gen_digest(challenge, cookie):
+    return hashlib.md5(cookie + str(challenge)).digest()
