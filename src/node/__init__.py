@@ -1,7 +1,7 @@
 # coding: utf-8
 import logging
 from gevent import socket, Greenlet
-from node.protocol import encode_name, decode_status
+from node.protocol import encode_name, decode_status, decode_challenge
 
 
 class OutgoingNodeConnection(Greenlet):
@@ -33,3 +33,6 @@ class OutgoingNodeConnection(Greenlet):
 
     def recv_status(self):
         return decode_status(self.socket)
+
+    def recv_challenge(self):
+        return decode_challenge(self.socket)

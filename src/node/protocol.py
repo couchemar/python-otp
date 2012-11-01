@@ -27,8 +27,23 @@ def encode_name(node_name, version=distrVersion, flags=distrFlags):
     return encode_request(_encode_name(node_name, version, flags))
 
 
+def _decode_length(sock, fmt=None):
+    if fmt == None:
+        fmt='!H'
+    return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
+
+
 def decode_status(sock):
-    [status_len] = struct.unpack('!H', sock.recv(2))
-    status = struct.unpack('!1s{}s'.format(status_len-1),
-                           sock.recv(status_len))
-    return status
+    [status_len] = _decode_length(sock)
+    return struct.unpack('!1s{}s'.format(status_len-1),
+                         sock.recv(status_len))
+
+
+
+def decode_challenge(sock):
+    [ch_len] = _decode_length(sock)
+    # Equal to decode_name (not realized yet)
+    _fmt = '!sHII'
+    name_fmt = '{}s'.format(ch_len - struct.calcsize(_fmt))
+    fmt = '{}{}'.format(_fmt, name_fmt)
+    return struct.unpack(fmt, sock.recv(ch_len))
