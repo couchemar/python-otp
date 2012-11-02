@@ -29,3 +29,5 @@ class NodeTestCase(unittest.TestCase):
         self.assertEqual(res[4], expected_node_name)
         out_conn.send_challenge_reply()
         res = out_conn.recv_challenge_ack()
+        self.assertEqual(len(res), 2)
+        self.assertEqual(res[0], 'a')

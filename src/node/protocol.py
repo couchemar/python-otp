@@ -62,9 +62,13 @@ def gen_digest(challenge, cookie):
 
 
 def encode_challenge_reply(challenge, digest):
-    return 'r{}{}'.format(struct.pack('!I', challenge), digest)
+    return encode_request(
+        'r{}{}'.format(struct.pack('!I', challenge), digest)
+    )
 
 
 def decode_challenge_ack(sock):
+    # Packet length not needed, only receive bytes.
+    _ = _decode_length(sock)
     fmt = '!1s16s'
     return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
