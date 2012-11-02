@@ -1,5 +1,6 @@
 # coding: utf-8
 import struct
+from common.protocol import encode_message
 
 # EPMD Requests
 ALIVE2_REQ_CODE = 120
@@ -35,9 +36,7 @@ def encode_request(request):
     """
     Each request *_REQ is preceded by a two-byte length field.
     """
-    request_len = len(request)
-    return struct.pack('!H{}s'.format(request_len),
-                       request_len, request)
+    return encode_message(request)
 
 
 def encode_alive2_req(port, node_name, extra="",

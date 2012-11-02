@@ -1,6 +1,7 @@
 # coding: utf-8
 import logging
 from gevent import socket, Greenlet
+from common.protocol import encode_message
 from node.protocol import (encode_name, decode_status, decode_challenge,
                            gen_challenge, gen_digest, encode_challenge_reply,
                            decode_challenge_ack)
@@ -9,10 +10,13 @@ from node.protocol import (encode_name, decode_status, decode_challenge,
 class OutgoingNodeConnection(Greenlet):
     logger = logging.getLogger('otp.node.connection')
 
+    encode = lambda self, message: encode_message(message)
+
     def __init__(self, node_name, port, cookie):
         super(OutgoingNodeConnection, self).__init__()
         self.port = port
         self.cookie = cookie
+        self.state = None
         if '@' in node_name:
             self.node_name = node_name
         else:
@@ -31,9 +35,12 @@ class OutgoingNodeConnection(Greenlet):
         self.logger.info('Connected to %s', (host_name,
                                              self.port))
 
+    def _send(self, message):
+        self.socket.send(self.encode(message))
+
     def send_name(self):
         self.logger.info('Sending name')
-        self.socket.send(encode_name(self.node_name))
+        self._send(encode_name(self.node_name))
         self.logger.info('Name sended')
 
     def recv_status(self):
@@ -53,7 +60,7 @@ class OutgoingNodeConnection(Greenlet):
         self.logger.info('Sending challenge reply')
         self.challenge = gen_challenge()
         digest = gen_digest(self.out_challenge, self.cookie)
-        self.socket.send(encode_challenge_reply(self.challenge, digest))
+        self._send(encode_challenge_reply(self.challenge, digest))
         self.logger.info('Challenge reply sended')
 
     def recv_challenge_ack(self):
@@ -64,6 +71,7 @@ class OutgoingNodeConnection(Greenlet):
         out_digest = challenge_ack[1]
         if out_digest == gen_digest(self.challenge, self.cookie):
             self.logger.info('Connection is up')
+            self.state = 'connected'
             return challenge_ack
         else:
             self.logger.warning('Cannot set up connection, '

@@ -2,7 +2,8 @@
 import struct
 import random
 import hashlib
-from epmd.codecs import encode_request
+
+from common.protocol import decode_message_length
 
 DISTR_FLAG_PUBLISHED = 1
 DISTR_FLAG_ATOMCACHE = 2
@@ -14,35 +15,25 @@ DISTR_FLAG_HIDDENATOMCACHE = 64
 DISTR_FLAG_NEWFUNTAGS = 128
 DISTR_FLAG_EXTENDEDPIDSPORTS = 256
 
-distrVersion = 5
-distrFlags = (DISTR_FLAG_EXTENDEDREFERENCES |
-              DISTR_FLAG_EXTENDEDPIDSPORTS |
-              DISTR_FLAG_DISTMONITOR)
+DISTR_VERSION = 5
+DISTR_FLAGS = (DISTR_FLAG_EXTENDEDREFERENCES |
+               DISTR_FLAG_EXTENDEDPIDSPORTS |
+               DISTR_FLAG_DISTMONITOR)
 
 
-def _encode_name(node_name, version, flags):
+def encode_name(node_name, version=DISTR_VERSION, flags=DISTR_FLAGS):
     v_f = struct.pack('!HI', version, flags)
     return 'n{}{}'.format(v_f, node_name)
 
 
-def encode_name(node_name, version=distrVersion, flags=distrFlags):
-    return encode_request(_encode_name(node_name, version, flags))
-
-
-def _decode_length(sock, fmt=None):
-    if fmt == None:
-        fmt='!H'
-    return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
-
-
 def decode_status(sock):
-    [status_len] = _decode_length(sock)
+    [status_len] = decode_message_length(sock)
     return struct.unpack('!1s{}s'.format(status_len-1),
                          sock.recv(status_len))
 
 
 def decode_challenge(sock):
-    [ch_len] = _decode_length(sock)
+    [ch_len] = decode_message_length(sock)
     _fmt = '!sHII'
     name_fmt = '{}s'.format(ch_len - struct.calcsize(_fmt))
     fmt = '{}{}'.format(_fmt, name_fmt)
@@ -62,13 +53,11 @@ def gen_digest(challenge, cookie):
 
 
 def encode_challenge_reply(challenge, digest):
-    return encode_request(
-        'r{}{}'.format(struct.pack('!I', challenge), digest)
-    )
+    return 'r{}{}'.format(struct.pack('!I', challenge), digest)
 
 
 def decode_challenge_ack(sock):
     # Packet length not needed, only receive bytes.
-    _ = _decode_length(sock)
+    _ = decode_message_length(sock)
     fmt = '!1s16s'
     return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
