@@ -46,13 +46,13 @@ class OutgoingNodeConnection(Greenlet):
         self.logger.info('Receiving challenge')
         challenge = decode_challenge(self.socket)
         self.logger.info('Challenge received: %s', challenge)
-        self.other_challenge = challenge[3]
+        self.out_challenge = challenge[3]
         return challenge
 
     def send_challenge_reply(self):
         self.logger.info('Sending challenge reply')
         self.challenge = gen_challenge()
-        digest = gen_digest(self.other_challenge, self.cookie)
+        digest = gen_digest(self.out_challenge, self.cookie)
         self.socket.send(encode_challenge_reply(self.challenge, digest))
         self.logger.info('Challenge reply sended')
 
@@ -60,4 +60,11 @@ class OutgoingNodeConnection(Greenlet):
         self.logger.info('Receiving challenge ack')
         challenge_ack = decode_challenge_ack(self.socket)
         self.logger.info('Challenge ack received: %s', challenge_ack)
-        return challenge_ack
+
+        out_digest = challenge_ack[1]
+        if out_digest == gen_digest(self.challenge, self.cookie):
+            self.logger.info('Connection is up')
+            return challenge_ack
+        else:
+            self.logger.warning('Cannot set up connection, '
+                                'because of digest missmatch.')
