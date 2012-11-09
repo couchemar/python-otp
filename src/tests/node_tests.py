@@ -39,4 +39,4 @@ class NodeTestCase(_BaseErlangTestCase):
         node = Node('test', 'secret', 9999)
         node.start()
         node.connect_node(self.erl_node_name)
-        node.join(0)
+        node.join(0.1)

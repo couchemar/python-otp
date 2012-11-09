@@ -1,6 +1,6 @@
 # coding: utf-8
 import logging
-from gevent import socket, Greenlet, sleep
+from gevent import socket, Greenlet, sleep, event
 
 
 import epmd
@@ -71,7 +71,7 @@ class OutgoingNodeConnection(Greenlet):
         self.logger.info('Challenge ack received: %s', challenge_ack)
         return challenge_ack
 
-    def do_handshake(self):
+    def do_handshake(self, connected_event):
         self.send_name()
         _, status = self.recv_status()
         if status == 'ok':
@@ -88,17 +88,17 @@ class OutgoingNodeConnection(Greenlet):
         if challenge_ack[1] == gen_digest(self.challenge, self.cookie):
             self.logger.info('Connection is up')
             self.state = 'connected'
+            connected_event.set()
         else:
             self.logger.warning('Cannot set up connection, '
                                 'because of digest missmatch.')
 
-    def _run(self):
-        if self.connect():
-            self.do_handshake()
-
 
 class Node(Greenlet):
     logger = logging.getLogger('otp.node')
+
+    CONNECT_NODE_TIMEOUT = 5
+
     def __init__(self, node_name, cookie, listening_port):
         super(Node, self).__init__()
         self.node_name = node_name
@@ -123,8 +123,17 @@ class Node(Greenlet):
         if out_node_name in self.node_connections:
             self.logger.warning('Already connected to "%s"', out_node_name)
         else:
+            connected_event = event.Event()
             out_conn = OutgoingNodeConnection(self.node_name,
                                               out_port,
                                               self.cookie)
-            out_conn.start()
-            self.node_connections[out_node_name] = out_conn
+            if out_conn.connect():
+                out_conn.do_handshake(connected_event)
+
+            if connected_event.wait(self.CONNECT_NODE_TIMEOUT):
+                self.node_connections[out_node_name] = out_conn
+            else:
+                self.logger.warning('Does not connected to "%s:%s" '
+                                    'after %s seconds',
+                                    out_node_name, out_port,
+                                    self.CONNECT_NODE_TIMEOUT)
