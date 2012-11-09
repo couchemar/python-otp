@@ -7,19 +7,9 @@ from time import sleep
 
 from epmd import EPMDKeepAliveConnection, port2_please
 
+from tests import _BaseErlangTestCase
 
-class EPMDTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.erl_node_name = 'erl1'
-        _dir = os.path.dirname(__file__)
-        _dir = os.path.join(_dir, 'test.sh')
-        self.shell = subprocess.Popen(['sh', _dir])
-        sleep(0.1)
-
-    def tearDown(self):
-        self.shell.terminate()
-        self.shell.kill()
+class EPMDTestCase(_BaseErlangTestCase):
 
     def test(self):
         conn = EPMDKeepAliveConnection('test', 9999)

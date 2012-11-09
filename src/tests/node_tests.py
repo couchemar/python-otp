@@ -1,16 +1,13 @@
 # coding: utf-8
-import unittest
 import socket
 
 from epmd import EPMDKeepAliveConnection, port2_please
 from node import OutgoingNodeConnection, Node
 
+from tests import _BaseErlangTestCase
 
-class OutgoingNodeConnectionTestCase(unittest.TestCase):
 
-    def setUp(self):
-        self.erl_node_name = 'erl1'
-
+class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
     def test_handshake(self):
         conn = EPMDKeepAliveConnection('test', 9999)
         conn.start()
@@ -36,11 +33,7 @@ class OutgoingNodeConnectionTestCase(unittest.TestCase):
         self.assertEqual(res[0], 'a')
 
 
-
-class NodeTestCase(unittest.TestCase):
-
-    def setUp(self):
-        self.erl_node_name = 'erl1'
+class NodeTestCase(_BaseErlangTestCase):
 
     def test(self):
         node = Node('test', 'secret', 9999)
