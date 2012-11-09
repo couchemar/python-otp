@@ -1,6 +1,9 @@
 # coding: utf-8
 import logging
-from gevent import socket, Greenlet
+from gevent import socket, Greenlet, sleep
+
+
+import epmd
 from common.protocol import encode_message
 from node.protocol import (encode_name, decode_status, decode_challenge,
                            gen_challenge, gen_digest, encode_challenge_reply,
@@ -27,13 +30,13 @@ class OutgoingNodeConnection(Greenlet):
         try:
             self.socket = socket.create_connection((host_name,
                                                     self.port))
-            self._connected = True
         except socket.error as exc:
             self.logger.error('Could not connect to %s, because of %s',
                               (host_name, self.port, exc))
-            return
+            return False
         self.logger.info('Connected to %s', (host_name,
                                              self.port))
+        return True
 
     def _send(self, message):
         self.socket.send(self.encode(message))
@@ -70,7 +73,7 @@ class OutgoingNodeConnection(Greenlet):
 
     def do_handshake(self):
         self.send_name()
-        (_, status) = self.recv_status()
+        _, status = self.recv_status()
         if status == 'ok':
             self.logger.info('Status is "ok"')
         else:
@@ -89,8 +92,39 @@ class OutgoingNodeConnection(Greenlet):
             self.logger.warning('Cannot set up connection, '
                                 'because of digest missmatch.')
 
+    def _run(self):
+        if self.connect():
+            self.do_handshake()
+
 
 class Node(Greenlet):
-    def __init__(self, node_name, port, cookie):
+    logger = logging.getLogger('otp.node')
+    def __init__(self, node_name, cookie, listening_port):
         super(Node, self).__init__()
+        self.node_name = node_name
+        self.cookie = cookie
+        self.listening_port = listening_port
 
+        self.epmd_connection = epmd.EPMDKeepAliveConnection(
+            node_name, listening_port
+        )
+
+        self.node_connections = {}
+
+    def _run(self):
+        self.epmd_connection.start()
+        while 1:
+            sleep(0)
+
+    def connect_node(self, out_node_name):
+        res = epmd.port2_please(out_node_name)
+        out_port = res[1]
+
+        if out_node_name in self.node_connections:
+            self.logger.warning('Already connected to "%s"', out_node_name)
+        else:
+            out_conn = OutgoingNodeConnection(self.node_name,
+                                              out_port,
+                                              self.cookie)
+            out_conn.start()
+            self.node_connections[out_node_name] = out_conn

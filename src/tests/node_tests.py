@@ -3,7 +3,7 @@ import unittest
 import socket
 
 from epmd import EPMDKeepAliveConnection, port2_please
-from node import OutgoingNodeConnection
+from node import OutgoingNodeConnection, Node
 
 
 class OutgoingNodeConnectionTestCase(unittest.TestCase):
@@ -34,3 +34,16 @@ class OutgoingNodeConnectionTestCase(unittest.TestCase):
         res = out_conn.recv_challenge_ack()
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0], 'a')
+
+
+
+class NodeTestCase(unittest.TestCase):
+
+    def setUp(self):
+        self.erl_node_name = 'erl1'
+
+    def test(self):
+        node = Node('test', 'secret', 9999)
+        node.start()
+        node.connect_node(self.erl_node_name)
+        node.join(0)
