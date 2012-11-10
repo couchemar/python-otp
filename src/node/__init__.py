@@ -2,7 +2,6 @@
 import logging
 from gevent import socket, Greenlet, sleep, event
 
-
 import epmd
 from common.protocol import encode_message
 from node.protocol import (encode_name, decode_status, decode_challenge,
