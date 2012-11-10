@@ -14,3 +14,9 @@ def decode_message_length(sock, fmt=None):
     if fmt == None:
         fmt='!H'
     return struct.unpack(fmt, sock.recv(struct.calcsize(fmt)))
+
+
+def _decode_message_length(message, fmt=None):
+    if fmt == None:
+        fmt='!H'
+    return struct.unpack(fmt, message)

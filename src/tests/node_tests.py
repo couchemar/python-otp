@@ -4,7 +4,7 @@ from node import Node
 from tests import _BaseErlangTestCase
 
 
-class NodeTestCase(_BaseErlangTestCase):
+class SimpleNodeTestCase(_BaseErlangTestCase):
 
     def test(self):
         node = Node('test', self.erl_node_secret, 9999)

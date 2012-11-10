@@ -3,7 +3,7 @@ import logging
 from gevent import socket, Greenlet, sleep, event
 
 import epmd
-from common.protocol import encode_message
+from common.protocol import encode_message, _decode_message_length
 from node.protocol import (encode_name, decode_status, decode_challenge,
                            gen_challenge, gen_digest, encode_challenge_reply,
                            decode_challenge_ack)
@@ -92,6 +92,21 @@ class OutgoingNodeConnection(Greenlet):
             self.logger.warning('Cannot set up connection, '
                                 'because of digest missmatch.')
 
+    def _receive(self, _bytes=4):
+        self.logger.debug('Receiving %s bytes', _bytes)
+        return self.socket.recv(_bytes)
+
+    def _run(self):
+        while 1:
+            msg = self._receive()
+            if msg == '':
+                self.logger.info('Got ping')
+                self._send('')
+            else:
+                [msg_len] = _decode_message_length(msg, '!I')
+                msg = self._receive(msg_len)
+                import ipdb; ipdb.set_trace()
+            sleep(0)
 
 class Node(Greenlet):
     logger = logging.getLogger('otp.node')
@@ -131,6 +146,7 @@ class Node(Greenlet):
 
             if connected_event.wait(self.CONNECT_NODE_TIMEOUT):
                 self.node_connections[out_node_name] = out_conn
+                out_conn.start()
             else:
                 self.logger.warning('Does not connected to "%s:%s" '
                                     'after %s seconds',

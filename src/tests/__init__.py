@@ -1,5 +1,4 @@
 # coding: utf-8
-import os
 import subprocess
 
 import time
@@ -11,8 +10,6 @@ class _BaseErlangTestCase(unittest.TestCase):
         self.erl_node_name = 'erl1'
         self.erl_node_secret = 'secret'
 
-        _dir = os.path.dirname(__file__)
-        _pth = os.path.join(_dir, 'test.sh')
         self.erl = subprocess.Popen(
             ['erl', '-noinput',
              '-sname', self.erl_node_name,
