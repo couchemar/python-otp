@@ -99,13 +99,14 @@ class OutgoingNodeConnection(Greenlet):
     def _run(self):
         while 1:
             msg = self._receive()
-            if msg == '':
+            if msg == '\x00'*4:
                 self.logger.info('Got ping')
                 self._send('')
             else:
+                self.logger.info('Received message')
+                msg = self._receive()
                 [msg_len] = _decode_message_length(msg, '!I')
                 msg = self._receive(msg_len)
-                import ipdb; ipdb.set_trace()
             sleep(0)
 
 class Node(Greenlet):
