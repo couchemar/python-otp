@@ -1,6 +1,7 @@
 # coding: utf-8
 import logging
 from gevent import socket, Greenlet, sleep, event
+from gevent.queue import Queue
 
 import epmd
 from common.protocol import encode_message, _decode_message_length
@@ -14,7 +15,8 @@ class OutgoingNodeConnection(Greenlet):
 
     encode = lambda self, message: encode_message(message)
 
-    def __init__(self, node_name, port, cookie):
+    def __init__(self, node_name, port, cookie,
+                 in_queue, out_queue):
         super(OutgoingNodeConnection, self).__init__()
         self.port = port
         self.cookie = cookie
@@ -23,6 +25,8 @@ class OutgoingNodeConnection(Greenlet):
             self.node_name = node_name
         else:
             self.node_name = '{}@{}'.format(node_name, socket.gethostname())
+        self.in_queue = in_queue
+        self.out_queue = out_queue
 
     def connect(self):
         host_name = socket.gethostname()
@@ -125,6 +129,8 @@ class Node(Greenlet):
         )
 
         self.node_connections = {}
+        self.in_queue = Queue()
+        self.out_queue = Queue()
 
     def _run(self):
         self.epmd_connection.start()
@@ -141,7 +147,9 @@ class Node(Greenlet):
             connected_event = event.Event()
             out_conn = OutgoingNodeConnection(self.node_name,
                                               out_port,
-                                              self.cookie)
+                                              self.cookie,
+                                              self.out_queue,
+                                              self.in_queue)
             if out_conn.connect():
                 out_conn.do_handshake(connected_event)
 
