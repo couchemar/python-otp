@@ -14,4 +14,5 @@ class SimpleNodeTestCase(_BaseErlangTestCase):
             node.node_connections[self.erl_node_name].state,
             'connected'
         )
+        self.assertTrue('test' in self.to_erl('erlang nodes [hidden]'))
         node.join(0.1)

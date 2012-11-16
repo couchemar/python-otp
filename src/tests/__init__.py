@@ -19,3 +19,12 @@ class _BaseErlangTestCase(unittest.TestCase):
 
     def tearDown(self):
         self.erl.kill()
+
+    def to_erl(self, message):
+        return subprocess.check_output(
+            ['erl_call',
+             '-sname', self.erl_node_name,
+             '-c', self.erl_node_secret,
+             '-h', 'to_erl',
+             '-a', message]
+        )
