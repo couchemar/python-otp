@@ -107,9 +107,8 @@ class OutgoingNodeConnection(Greenlet):
                 self.logger.info('Got ping')
                 self._send('')
             else:
-                self.logger.info('Received message')
-                msg = self._receive()
                 [msg_len] = _decode_message_length(msg, '!I')
+                self.logger.info('Received message')
                 msg = self._receive(msg_len)
             sleep(0)
 
