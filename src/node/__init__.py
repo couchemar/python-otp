@@ -4,7 +4,9 @@ from gevent import socket, Greenlet, sleep, event
 from gevent.queue import Queue
 
 import epmd
-from common.protocol import encode_message, _decode_message_length
+import ext
+from common.protocol import (encode_message, _decode_message_length,
+                             decode_dist_message)
 from node.protocol import (encode_name, decode_status, decode_challenge,
                            gen_challenge, gen_digest, encode_challenge_reply,
                            decode_challenge_ack)
@@ -110,6 +112,12 @@ class OutgoingNodeConnection(Greenlet):
                 [msg_len] = _decode_message_length(msg, '!I')
                 self.logger.info('Received message')
                 msg = self._receive(msg_len)
+                msg_type, msg_body = decode_dist_message(msg)
+                if msg_type != 112:
+                    self.logger.error(
+                        'Got unexpected message type: %s', msg_type
+                    )
+                dist_msg = ext.decode(msg_body)
             sleep(0)
 
 class Node(Greenlet):
