@@ -1,4 +1,5 @@
 # coding: utf-8
+import sys
 import logging
 from gevent import socket, Greenlet, sleep, event
 from gevent.queue import Queue
@@ -16,6 +17,7 @@ class OutgoingNodeConnection(Greenlet):
     logger = logging.getLogger('otp.node.connection')
 
     encode = lambda self, message: encode_message(message)
+    _TIC = sys.float_info.min
 
     def __init__(self, node_name, port, cookie,
                  in_queue, out_queue):
@@ -118,12 +120,13 @@ class OutgoingNodeConnection(Greenlet):
                         'Got unexpected message type: %s', msg_type
                     )
                 dist_msg = ext.decode(msg_body)
-            sleep(0)
+            sleep(self._TIC)
 
 class Node(Greenlet):
     logger = logging.getLogger('otp.node')
 
     CONNECT_NODE_TIMEOUT = 5
+    _TIC = sys.float_info.min
 
     def __init__(self, node_name, cookie, listening_port):
         super(Node, self).__init__()
@@ -142,7 +145,7 @@ class Node(Greenlet):
     def _run(self):
         self.epmd_connection.start()
         while 1:
-            sleep(0)
+            sleep(self._TIC)
 
     def connect_node(self, out_node_name):
         res = epmd.port2_please(out_node_name)

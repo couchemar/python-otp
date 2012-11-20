@@ -1,4 +1,5 @@
 # coding: utf-8
+import sys
 import struct
 import logging
 from gevent import sleep, socket, Greenlet
@@ -11,6 +12,8 @@ EPMD_PORT = 4369
 
 class EPMDConnection(Greenlet):
     logger = logging.getLogger('otp.epmd_connection')
+
+    _TIC = sys.float_info.min
 
     def __init__(self, epmd_host=None,
                  epmd_port=None):
@@ -81,7 +84,7 @@ class EPMDKeepAliveConnection(EPMDConnection):
             return
         self._register()
         while self._connected and self._status == 'registered':
-            sleep(0)
+            sleep(self._TIC)
 
 
 def port2_please(node_name, host=None, port=None):
