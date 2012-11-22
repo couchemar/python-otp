@@ -25,6 +25,6 @@ class SimpleNodeTestCase(_BaseErlangTestCase):
 
         node_name = 'test@' + socket.gethostname()
 
-        self.send_message('p', node_name, 'atom')
+        self.send_message('proc', node_name, 'atom')
 
         node.join(0.1)
