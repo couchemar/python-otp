@@ -120,6 +120,7 @@ class OutgoingNodeConnection(Greenlet):
                         'Got unexpected message type: %s', msg_type
                     )
                 dist_msg = ext.decode(msg_body)
+                self.out_queue.put(dist_msg)
             sleep(self._TIC)
 
 class Node(Greenlet):
@@ -142,8 +143,12 @@ class Node(Greenlet):
         self.node_connections = {}
         if in_queue is None:
             self.in_queue = Queue()
+        else:
+            self.in_queue = in_queue
         if out_queue is None:
             self.out_queue = Queue()
+        else:
+            self.out_queue = out_queue
 
     def _run(self):
         self.epmd_connection.start()
