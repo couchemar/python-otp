@@ -128,7 +128,8 @@ class Node(Greenlet):
     CONNECT_NODE_TIMEOUT = 5
     _TIC = sys.float_info.min
 
-    def __init__(self, node_name, cookie, listening_port):
+    def __init__(self, node_name, cookie,
+                 listening_port, in_queue=None, out_queue=None):
         super(Node, self).__init__()
         self.node_name = node_name
         self.cookie = cookie
@@ -139,8 +140,10 @@ class Node(Greenlet):
         )
 
         self.node_connections = {}
-        self.in_queue = Queue()
-        self.out_queue = Queue()
+        if in_queue is None:
+            self.in_queue = Queue()
+        if out_queue is None:
+            self.out_queue = Queue()
 
     def _run(self):
         self.epmd_connection.start()
@@ -155,11 +158,12 @@ class Node(Greenlet):
             self.logger.warning('Already connected to "%s"', out_node_name)
         else:
             connected_event = event.Event()
-            out_conn = OutgoingNodeConnection(self.node_name,
-                                              out_port,
-                                              self.cookie,
-                                              self.out_queue,
-                                              self.in_queue)
+            out_conn = OutgoingNodeConnection(
+                self.node_name,
+                out_port,
+                self.cookie,
+                in_queue=self.out_queue,
+                out_queue=self.in_queue)
             if out_conn.connect():
                 out_conn.do_handshake(connected_event)
 
