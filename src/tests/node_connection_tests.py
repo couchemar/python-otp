@@ -16,7 +16,8 @@ class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
         erl_port = res[1]
 
         out_conn = OutgoingNodeConnection(
-            'test', erl_port, self.erl_node_secret
+            'test', erl_port, self.erl_node_secret,
+            None, None
         )
         out_conn.connect()
         out_conn.send_name()
