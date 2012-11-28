@@ -24,10 +24,14 @@ class BaseActor(GeventActor):
                              exception_type, exception_value, traceback)
 
     def on_receive(self, message):
-        pass
+        self.logger.info('Received: %s', message)
+        self._process_message(message)
 
     def _on_start(self):
         pass
 
     def _on_stop(self):
+        pass
+
+    def _process_message(self, message):
         pass

@@ -1,15 +1,18 @@
 # coding: utf-8
 import socket
 
+from gevent import event
+from gevent.queue import Queue
+
 from epmd import EPMDKeepAliveConnection, port2_please
 
-from node import Node
-from node.connection import OutgoingNodeConnection
+from node.connection import OutgoingNodeConnection, Channel
+from node.protocol import gen_challenge
 
 from tests import _BaseErlangTestCase
 
 
-class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
+class ChannelTestCase(_BaseErlangTestCase):
     def test_handshake(self):
         conn = EPMDKeepAliveConnection('test', 9999)
         conn.start()
@@ -17,22 +20,48 @@ class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
         res = port2_please(self.erl_node_name)
         erl_port = res[1]
 
-        out_conn = OutgoingNodeConnection(
-            'test', erl_port, self.erl_node_secret,
-            None, None
-        )
-        out_conn.connect()
-        out_conn.send_name()
-        self.assertEqual(out_conn.recv_status(), ('s', 'ok'))
+        channel = Channel(None)
+        channel.connect(erl_port)
 
-        res = out_conn.recv_challenge()
+        node_name = self.erl_node_name + '@' + socket.gethostname()
+        channel.send_name(node_name)
+        self.assertEqual(channel.recv_status(), ('s', 'ok'))
+
+        res = channel.recv_challenge()
         self.assertEqual(len(res), 5)
         self.assertEqual(res[0], 'n')
 
-        expected_node_name = self.erl_node_name + '@' + socket.gethostname()
-        self.assertEqual(res[4], expected_node_name)
+        self.assertEqual(res[4], node_name)
 
-        out_conn.send_challenge_reply(res[3])
-        res = out_conn.recv_challenge_ack()
+        out_challenge = res[3]
+        challenge = gen_challenge()
+
+        channel.send_challenge_reply(self.erl_node_secret,
+                                     challenge, out_challenge)
+        res = channel.recv_challenge_ack()
         self.assertEqual(len(res), 2)
         self.assertEqual(res[0], 'a')
+
+
+class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
+
+    def test_recv_message(self):
+        res = port2_please(self.erl_node_name)
+        erl_port = res[1]
+
+        res_queue = Queue()
+        connected_event = event.Event()
+
+        class _Mock(OutgoingNodeConnection):
+            def _process_message(self, message):
+                res_queue.put(message)
+
+        _Mock.start('test', erl_port,
+                    self.erl_node_secret,
+                    connected_event)
+        connected_event.wait()
+
+        node_name = 'test@' + socket.gethostname()
+        self.send_message('proc', node_name, 'atom')
+
+        self.assertEqual(res_queue.get()['message'][-1], 'atom')

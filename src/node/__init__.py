@@ -49,18 +49,15 @@ class Node(Greenlet):
             self.logger.warning('Already connected to "%s"', out_node_name)
         else:
             connected_event = event.Event()
-            out_conn = OutgoingNodeConnection(
+            out_conn = OutgoingNodeConnection.start(
                 self.node_name,
                 out_port,
                 self.cookie,
-                in_queue=self.out_queue,
-                out_queue=self.in_queue)
-            if out_conn.connect():
-                out_conn.do_handshake(connected_event)
+                connected_event
+            )
 
             if connected_event.wait(self.CONNECT_NODE_TIMEOUT):
                 self.node_connections[out_node_name] = out_conn
-                out_conn.start()
             else:
                 self.logger.warning('Does not connected to "%s:%s" '
                                     'after %s seconds',
