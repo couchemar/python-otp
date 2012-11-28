@@ -2,7 +2,9 @@
 import socket
 
 from epmd import EPMDKeepAliveConnection, port2_please
-from node import OutgoingNodeConnection, Node
+
+from node import Node
+from node.connection import OutgoingNodeConnection
 
 from tests import _BaseErlangTestCase
 
