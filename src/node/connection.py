@@ -11,6 +11,14 @@ from node.protocol import (encode_name, decode_status, decode_challenge,
                            decode_challenge_ack)
 
 
+class OutgoingConnection(Greenlet):
+    logger = logging.getLogger('otp.node.connection')
+
+    def __init__(self, socket_obj):
+        super(OutgoingConnection, self).__init__()
+        self.socket = socket_obj
+
+
 class OutgoingNodeConnection(Greenlet):
     logger = logging.getLogger('otp.node.connection')
 
