@@ -4,7 +4,7 @@ import struct
 import logging
 from gevent import sleep, socket, Greenlet
 
-import codecs
+from epmd import codecs
 
 EPMD_HOST = 'localhost'
 EPMD_PORT = 4369
@@ -28,7 +28,8 @@ class EPMDConnection(Greenlet):
         else:
             self.epmd_port = EPMD_PORT
 
-        self.logger.info('Connect to (%s, %s)', self.epmd_host, self.epmd_port)
+        self.logger.info('Connect to (%s, %s)',
+                         self.epmd_host, self.epmd_port)
 
         try:
             self.socket = socket.create_connection((self.epmd_host,
@@ -49,7 +50,7 @@ class EPMDConnection(Greenlet):
         self.logger.info('Receive')
         [resp_code] = struct.unpack('!B', self.socket.recv(1))
         self.logger.info('Received: %s', (resp_code,
-                                        codecs.RESPONSES[resp_code]))
+                                          codecs.RESPONSES[resp_code]))
         return codecs.decoders[resp_code](self.socket)
 
 
