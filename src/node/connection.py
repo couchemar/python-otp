@@ -23,6 +23,7 @@ class Channel(Greenlet):
     def __init__(self, ref):
         super(Channel, self).__init__()
         self.ref = ref
+        self.socket = None
 
     def connect(self, port):
         host_name = socket.gethostname()
@@ -129,7 +130,7 @@ class OutgoingNodeConnection(BaseActor):
         out_challenge = challenge[3]
         challenge = gen_challenge()
         self.channel.send_challenge_reply(self.cookie, challenge,
-                                          out_challeng)
+                                          out_challenge)
         challenge_ack = self.channel.recv_challenge_ack()
         if challenge_ack[1] == gen_digest(challenge, self.cookie):
             self.logger.info('Connection is up')

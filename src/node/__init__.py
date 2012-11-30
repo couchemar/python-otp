@@ -1,22 +1,21 @@
 # coding: utf-8
-import sys
 import logging
-from gevent import Greenlet, sleep, event
-from gevent.queue import Queue
+from gevent import event
 
 import epmd
+
+from actors import BaseActor
 
 from node.connection import OutgoingNodeConnection
 
 
-class Node(Greenlet):
+class Node(BaseActor):
     logger = logging.getLogger('otp.node')
 
     CONNECT_NODE_TIMEOUT = 5
-    _TIC = sys.float_info.min
 
     def __init__(self, node_name, cookie,
-                 listening_port, in_queue=None, out_queue=None):
+                 listening_port):
         super(Node, self).__init__()
         self.node_name = node_name
         self.cookie = cookie
@@ -27,19 +26,9 @@ class Node(Greenlet):
         )
 
         self.node_connections = {}
-        if in_queue is None:
-            self.in_queue = Queue()
-        else:
-            self.in_queue = in_queue
-        if out_queue is None:
-            self.out_queue = Queue()
-        else:
-            self.out_queue = out_queue
 
-    def _run(self):
+    def _on_start(self):
         self.epmd_connection.start()
-        while 1:
-            sleep(self._TIC)
 
     def connect_node(self, out_node_name):
         res = epmd.port2_please(out_node_name)
@@ -58,8 +47,10 @@ class Node(Greenlet):
 
             if connected_event.wait(self.CONNECT_NODE_TIMEOUT):
                 self.node_connections[out_node_name] = out_conn
+                return True
             else:
                 self.logger.warning('Does not connected to "%s:%s" '
                                     'after %s seconds',
                                     out_node_name, out_port,
                                     self.CONNECT_NODE_TIMEOUT)
+                return False
