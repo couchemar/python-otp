@@ -7,7 +7,7 @@ from gevent.queue import Queue
 from epmd import EPMDKeepAliveConnection, port2_please
 
 from node.connection import OutgoingNodeConnection, Channel
-from node.protocol import gen_challenge
+from protocol.node import gen_challenge
 
 from tests import _BaseErlangTestCase
 

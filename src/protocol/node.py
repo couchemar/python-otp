@@ -3,7 +3,7 @@ import struct
 import random
 import hashlib
 
-from common.protocol import decode_message_length
+from protocol import decode_message_length
 
 DISTR_FLAG_PUBLISHED = 1
 DISTR_FLAG_ATOMCACHE = 2

@@ -4,10 +4,11 @@ import logging
 from gevent import socket, Greenlet, sleep
 
 import ext
-from common.protocol import (encode_message, _decode_message_length,
-                             decode_dist_message)
-from node.protocol import (encode_name, decode_status, decode_challenge,
-                           gen_challenge, gen_digest, encode_challenge_reply,
+from protocol import (encode_message, _decode_message_length,
+                      decode_dist_message)
+from protocol.node import (encode_name, decode_status,
+                           decode_challenge, gen_challenge,
+                           gen_digest, encode_challenge_reply,
                            decode_challenge_ack)
 
 from actors import BaseActor

@@ -1,6 +1,6 @@
 # coding: utf-8
 import struct
-from common.protocol import encode_message
+from protocol import encode_message
 
 # EPMD Requests
 ALIVE2_REQ_CODE = 120

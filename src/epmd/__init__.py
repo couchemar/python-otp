@@ -4,7 +4,7 @@ import struct
 import logging
 from gevent import sleep, socket, Greenlet
 
-from epmd import codecs
+from protocol import epmd as codec
 
 EPMD_HOST = 'localhost'
 EPMD_PORT = 4369
@@ -42,7 +42,7 @@ class EPMDConnection(Greenlet):
                                exc))
 
     def send_request(self, request):
-        epmd_request = codecs.encode_request(request)
+        epmd_request = codec.encode_request(request)
         self.logger.info('Send request')
         self.socket.send(epmd_request)
 
@@ -50,8 +50,8 @@ class EPMDConnection(Greenlet):
         self.logger.info('Receive')
         [resp_code] = struct.unpack('!B', self.socket.recv(1))
         self.logger.info('Received: %s', (resp_code,
-                                          codecs.RESPONSES[resp_code]))
-        return codecs.decoders[resp_code](self.socket)
+                                          codec.RESPONSES[resp_code]))
+        return codec.decoders[resp_code](self.socket)
 
 
 class EPMDKeepAliveConnection(EPMDConnection):
@@ -66,9 +66,9 @@ class EPMDKeepAliveConnection(EPMDConnection):
         self._status = None
 
     def _register(self):
-        self.logger.info('Try to register node. Send %s', codecs.ALIVE2_REQ)
+        self.logger.info('Try to register node. Send %s', codec.ALIVE2_REQ)
         self._status = 'registering'
-        self.send_request(codecs.encode_alive2_req(self.port,
+        self.send_request(codec.encode_alive2_req(self.port,
                                                    self.node_name))
         result, creation = self.recv_response()
         self.logger.debug('Registration result: %s', (result, creation))
@@ -91,7 +91,7 @@ class EPMDKeepAliveConnection(EPMDConnection):
 def port2_please(node_name, host=None, port=None):
     node_name = node_name.split('@')[0]
     conn = EPMDConnection(host, port)
-    conn.send_request(codecs.encode_port_please2_req(node_name))
+    conn.send_request(codec.encode_port_please2_req(node_name))
     return conn.recv_response()
 
 

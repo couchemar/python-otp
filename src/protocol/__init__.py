@@ -23,4 +23,4 @@ def _decode_message_length(message, fmt=None):
 
 
 def decode_dist_message(message):
-    return struct.unpack('!B{}s'.format(len(message)-1), message)
+    return struct.unpack('!B{}s'.format(len(message) - 1), message)
