@@ -4,3 +4,10 @@ cleanpyc:
 clean: cleanpyc
 
 
+test:
+	@echo "Make tests..."
+	nosetests tests/
+
+tests: test
+
+
