@@ -30,7 +30,7 @@ def decode_pid_ext(data):
     node_id, rest = _decode_int(rest)
     node_serial, rest = _decode_int(rest)
     node_creation, rest = _decode_byte(rest)
-    return (node, node_id, node_serial, node_creation), rest
+    return ext_types.Pid(node, node_id, node_serial, node_creation), rest
 
 SMALL_TUPLE_EXT = 104
 def decode_small_tuple_ext(data):
