@@ -4,7 +4,9 @@ import subprocess
 import time
 import unittest
 
+
 class _BaseErlangTestCase(unittest.TestCase):
+    MAX_ERLANG_NODE_START_ATTEMPTS = 10
 
     def setUp(self):
         self.erl_node_name = 'erl1'
@@ -13,9 +15,27 @@ class _BaseErlangTestCase(unittest.TestCase):
         self.erl = subprocess.Popen(
             ['erl', '-noinput',
              '-sname', self.erl_node_name,
-             '-setcookie', self.erl_node_secret]
+             '-setcookie', self.erl_node_secret],
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
-        time.sleep(0.4)
+        print 'Ensure erlang node start...'
+        for a in xrange(self.MAX_ERLANG_NODE_START_ATTEMPTS):
+            print 'Attempt {}'.format(a)
+            try:
+                ret = self.exec_function('erlang nodes')
+                if ret == '[]':
+                    break
+                else:
+                    assert False, 'Got unexpected output {}'.format(ret)
+            except:
+                time.sleep(0.1)
+        else:
+            self.erl.kill()
+            assert False, ('Could not start erlang node '
+                           'for {} attempts').format(
+                               self.MAX_ERLANG_NODE_START_ATTEMPTS)
 
     def tearDown(self):
         self.erl.kill()
@@ -37,9 +57,9 @@ class _BaseErlangTestCase(unittest.TestCase):
              '-c', self.erl_node_secret,
              '-h', 'to_erl',
              '-e'],
-             stdin=subprocess.PIPE,
-             stdout=subprocess.PIPE,
-             stderr=subprocess.PIPE
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE
         )
         out, err = erl.communicate('{}\n'.format(message))
         ret = erl.returncode
@@ -51,5 +71,5 @@ class _BaseErlangTestCase(unittest.TestCase):
         res = self.exec_on_erl(
             '{' + proc + ', ' + node + '} !' + '{}.'.format(message)
         )
-        self.assertEqual(res, '{ok, ' +'{}'.format(message) + '}')
+        self.assertEqual(res, '{ok, ' + '{}'.format(message) + '}')
         return res
