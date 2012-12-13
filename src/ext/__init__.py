@@ -1,5 +1,6 @@
 # coding: utf-8
 import struct
+from ext import ext_types
 
 def _decode_byte(data):
     [b] = struct.unpack('!B', data[:1])
@@ -17,8 +18,9 @@ ATOM_EXT = 100
 def decode_atom_ext(data):
     [atom_len] = struct.unpack('!H', data[:2])
     _data = data[2:2+atom_len]
-    [atom_name] = struct.unpack('!{}s'.format(atom_len), _data)
-    return atom_name, data[2+atom_len:]
+    [_atom] = struct.unpack('!{}s'.format(atom_len), _data)
+    atom = ext_types.Atom(_atom)
+    return atom, data[2+atom_len:]
 
 PID_EXT = 103
 def decode_pid_ext(data):
