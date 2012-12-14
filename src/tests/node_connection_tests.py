@@ -9,6 +9,8 @@ from epmd import EPMDKeepAliveConnection, port2_please
 from node.connection import OutgoingNodeConnection, Channel
 from protocol.node import gen_challenge
 
+from ext import ext_types
+
 from tests import _BaseErlangTestCase
 
 
@@ -62,6 +64,8 @@ class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
         connected_event.wait()
 
         node_name = 'test@' + socket.gethostname()
-        self.send_message('proc', node_name, 'atom')
+        self.send_message("'_'", node_name, 'atom')
 
-        self.assertEqual(res_queue.get()['message'][-1], 'atom')
+        result_atom = res_queue.get()['message'][-1]
+        self.assertIsInstance(result_atom, ext_types.Atom)
+        self.assertEqual(result_atom, 'atom')

@@ -12,7 +12,7 @@ class Pid(object):
         self.creation = creation
 
     def __repr__(self):
-        return '{node}|<{node_id}.{serial}.{creation}>'.format(
+        return '{node}|<{creation}.{node_id}.{serial}>'.format(
             node=self.node, node_id=self.node_id,
             serial=self.serial, creation=self.creation
         )
