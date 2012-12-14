@@ -47,25 +47,60 @@ class ChannelTestCase(_BaseErlangTestCase):
 
 class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
 
-    def test_recv_message(self):
+    def setUp(self):
+        super(OutgoingNodeConnectionTestCase, self).setUp()
+
         res = port2_please(self.erl_node_name)
         erl_port = res[1]
 
-        res_queue = Queue()
         connected_event = event.Event()
 
+        res_queue = Queue()
+
         class _Mock(OutgoingNodeConnection):
+
             def _process_message(self, message):
                 res_queue.put(message)
 
-        _Mock.start('test', erl_port,
-                    self.erl_node_secret,
-                    connected_event)
+        self.res_queue = res_queue
+        self.connection = _Mock.start('test', erl_port,
+                                      self.erl_node_secret,
+                                      connected_event)
         connected_event.wait()
 
-        node_name = 'test@' + socket.gethostname()
-        self.send_message("'_'", node_name, 'atom')
+        self.node_name = 'test@' + socket.gethostname()
 
-        result_atom = res_queue.get()['message'][-1]
-        self.assertIsInstance(result_atom, ext_types.Atom)
-        self.assertEqual(result_atom, 'atom')
+    def test_recv_small_integer(self):
+        self.send_message("'_'", self.node_name, '9')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, 9)
+
+    def test_recv_integer(self):
+        self.send_message("'_'", self.node_name, '9876')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, 9876)
+
+        self.send_message("'_'", self.node_name, '-9')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, -9)
+
+    def test_recv_float(self):
+        self.send_message("'_'", self.node_name, '99.9876')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, 99.9876)
+
+        self.send_message("'_'", self.node_name, '-0.00230022')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, -0.00230022)
+
+    def test_recv_atom(self):
+        self.send_message("'_'", self.node_name, 'atom')
+
+        result = self.res_queue.get()['message'][-1]
+        self.assertIsInstance(result, ext_types.Atom)
+        self.assertEqual(result, 'atom')

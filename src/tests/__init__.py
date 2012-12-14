@@ -71,5 +71,5 @@ class _BaseErlangTestCase(unittest.TestCase):
         res = self.exec_on_erl(
             '{' + proc + ', ' + node + '} !' + '{}.'.format(message)
         )
-        self.assertEqual(res, '{ok, ' + '{}'.format(message) + '}')
+        self.assertTrue('ok' in res)
         return res

@@ -6,13 +6,25 @@ def _decode_byte(data):
     [b] = struct.unpack('!B', data[:1])
     return b, data[1:]
 
-def _decode_int(data):
+def _decode_unsign_int(data):
     [i] = struct.unpack('!I', data[:4])
+    return i, data[4:]
+
+def _decode_int(data):
+    [i] = struct.unpack('!l', data[:4])
     return i, data[4:]
 
 SMALL_INTEGER_EXT = 97
 def decode_small_integer_ext(data):
     return _decode_byte(data)
+
+INTEGER_EXT = 98
+def decode_integer_ext(data):
+    return _decode_int(data)
+
+FLOAT_EXT = 99
+def decode_float_ext(data):
+    return float(data.strip('\x00')), data[31:]
 
 ATOM_EXT = 100
 def decode_atom_ext(data):
@@ -27,8 +39,8 @@ def decode_pid_ext(data):
     # NODE | ID | SERIAL | CREATION
     # NODE:= [ATOM_EXT, SMALL_ATOM_EXT, ATOM_CACHE_REF]
     node, rest = decode_ext(data)
-    node_id, rest = _decode_int(rest)
-    node_serial, rest = _decode_int(rest)
+    node_id, rest = _decode_unsign_int(rest)
+    node_serial, rest = _decode_unsign_int(rest)
     node_creation, rest = _decode_byte(rest)
     return ext_types.Pid(node, node_id, node_serial, node_creation), rest
 
@@ -62,6 +74,8 @@ def decode_term(data):
 
 
 DECODERS = {SMALL_INTEGER_EXT: decode_small_integer_ext,
+            INTEGER_EXT: decode_integer_ext,
+            FLOAT_EXT: decode_float_ext,
             ATOM_EXT: decode_atom_ext,
             PID_EXT: decode_pid_ext,
             SMALL_TUPLE_EXT: decode_small_tuple_ext,}
