@@ -76,7 +76,11 @@ class Channel(Greenlet):
     def _run(self):
         while 1:
             msg = self._receive()
-            if msg == '\x00' * 4:
+            if msg == '':
+                self.logger.info('Connection with %s gone down',
+                                 self.socket.getpeername())
+                self.ref.tell({'down': self.socket.getpeername()})
+            elif msg == '\x00' * 4:
                 self.logger.info('Got ping')
                 self._send('')
             else:

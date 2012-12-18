@@ -70,6 +70,15 @@ class OutgoingNodeConnectionTestCase(_BaseErlangTestCase):
 
         self.node_name = 'test@' + socket.gethostname()
 
+    def test_node_down(self):
+        self.send_message("'_'", self.node_name, '3')
+        result = self.res_queue.get()['message'][-1]
+        self.assertEqual(result, 3)
+
+        self.erl.terminate()
+        result = self.res_queue.get()
+        self.assertTrue('down' in result)
+
     def test_recv_small_integer(self):
         self.send_message("'_'", self.node_name, '9')
 
